@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pixelproof.dev — Indie Game Devlog</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #06080c;
+    --bg-card: #0d1219;
+    --border: #1a2332;
+    --border-glow: #0f3d2e;
+    --text-primary: #c8d6e5;
+    --text-secondary: #5a6e82;
+    --text-dim: #2e3d4f;
+    --accent: #00e68a;
+    --accent-glow: rgba(0, 230, 138, 0.15);
+    --accent-cyan: #00d4ff;
+    --accent-red: #ff4757;
+    --accent-amber: #ffa502;
+    --accent-purple: #a55eea;
+    --scanline: rgba(0, 230, 138, 0.03);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--bg-deep);
+  }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scanline) 2px, var(--scanline) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.5;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: rgba(6, 8, 12, 0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-logo .dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent), 0 0 20px rgba(0, 230, 138, 0.3);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent), 0 0 20px rgba(0, 230, 138, 0.3); }
+    50% { opacity: 0.6; box-shadow: 0 0 4px var(--accent), 0 0 10px rgba(0, 230, 138, 0.15); }
+  }
+
+  .nav-links { display: flex; gap: 0.25rem; list-style: none; }
+
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.5rem 0.85rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); background: var(--accent-glow); }
+  .nav-links a.active { color: var(--accent); }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.75rem;
+  }
+
+  section {
+    padding: 6rem 2rem 4rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-label::before { content: '//'; color: var(--text-dim); }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 .hl-green { color: var(--accent); text-shadow: 0 0 30px rgba(0, 230, 138, 0.25); }
+  h1 .hl-cyan { color: var(--accent-cyan); text-shadow: 0 0 30px rgba(0, 212, 255, 0.25); }
+
+  h2 { font-size: 1.4rem; font-weight: 600; margin-bottom: 1rem; }
+
+  p.lead { font-size: 0.85rem; color: var(--text-secondary); max-width: 560px; line-height: 1.8; }
+
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    padding-top: 56px;
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.15;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(0, 230, 138, 0.06) 0%, transparent 70%);
+    top: 20%; left: -10%;
+    pointer-events: none;
+  }
+
+  .hero-glow-2 {
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.04) 0%, transparent 70%);
+    top: 40%; right: -5%;
+    pointer-events: none;
+  }
+
+  .status-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.65rem;
+    color: var(--accent);
+    background: rgba(0, 230, 138, 0.06);
+    border: 1px solid rgba(0, 230, 138, 0.15);
+    padding: 0.35rem 0.75rem;
+    border-radius: 3px;
+    margin-bottom: 1.5rem;
+    width: fit-content;
+  }
+
+  .status-bar .blink {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .hero-meta span { display: flex; align-items: center; gap: 0.4rem; }
+  .hero-meta .val { color: var(--text-secondary); }
+
+  /* ═══ GAMES ═══ */
+  .games-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .game-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .game-card:hover {
+    border-color: var(--border-glow);
+    box-shadow: 0 0 40px rgba(0, 230, 138, 0.05);
+  }
+
+  .game-card--featured { grid-column: 1 / -1; }
+
+  .game-card-banner {
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .game-card--featured .game-card-banner { height: 220px; }
+
+  .banner--outbreak { background: linear-gradient(135deg, #0a1a12 0%, #061210 40%, #0d0a14 100%); }
+  .banner--outbreak::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(0, 230, 138, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 30%, rgba(0, 212, 255, 0.05) 0%, transparent 40%);
+  }
+
+  .banner--dayzero { background: linear-gradient(135deg, #0f0d14 0%, #0a0814 40%, #14101a 100%); }
+  .banner--dayzero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 70% 60%, rgba(0, 212, 255, 0.07) 0%, transparent 50%), radial-gradient(circle at 20% 40%, rgba(165, 94, 234, 0.05) 0%, transparent 40%);
+  }
+
+  .game-title-overlay { position: relative; z-index: 1; text-align: center; }
+
+  .game-title-overlay h3 { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
+  .game-card--featured .game-title-overlay h3 { font-size: 1.8rem; }
+
+  .title--outbreak { color: var(--accent); text-shadow: 0 0 40px rgba(0, 230, 138, 0.4), 0 0 80px rgba(0, 230, 138, 0.15); }
+  .title--dayzero { color: var(--accent-cyan); text-shadow: 0 0 40px rgba(0, 212, 255, 0.4), 0 0 80px rgba(0, 212, 255, 0.15); }
+
+  .game-title-overlay .subtitle { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-dim); margin-top: 0.3rem; }
+
+  .game-card-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+
+  .game-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+
+  .tag { font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25rem 0.55rem; border-radius: 2px; border: 1px solid; }
+
+  .tag--green { color: var(--accent); border-color: rgba(0, 230, 138, 0.25); background: rgba(0, 230, 138, 0.06); }
+  .tag--cyan { color: var(--accent-cyan); border-color: rgba(0, 212, 255, 0.25); background: rgba(0, 212, 255, 0.06); }
+  .tag--amber { color: var(--accent-amber); border-color: rgba(255, 165, 2, 0.25); background: rgba(255, 165, 2, 0.06); }
+  .tag--purple { color: var(--accent-purple); border-color: rgba(165, 94, 234, 0.25); background: rgba(165, 94, 234, 0.06); }
+  .tag--red { color: var(--accent-red); border-color: rgba(255, 71, 87, 0.25); background: rgba(255, 71, 87, 0.06); }
+
+  .game-desc { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.25rem; flex: 1; }
+
+  .game-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.62rem; padding: 0.4rem 0.7rem; border-radius: 3px; width: fit-content; }
+  .status--wip { color: var(--accent-amber); background: rgba(255, 165, 2, 0.06); border: 1px solid rgba(255, 165, 2, 0.15); }
+  .status--free { color: var(--accent-cyan); background: rgba(0, 212, 255, 0.06); border: 1px solid rgba(0, 212, 255, 0.15); }
+
+  /* ═══ DEVLOG ═══ */
+  .timeline { position: relative; padding-left: 2rem; }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent-cyan), var(--border) 70%, transparent);
+  }
+
+  .timeline-entry { position: relative; margin-bottom: 2rem; padding-left: 1rem; }
+
+  .timeline-entry::before {
+    content: '';
+    position: absolute;
+    left: -2rem; top: 0.55rem;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-cyan);
+    background: var(--bg-deep);
+  }
+
+  .timeline-entry:first-child::before {
+    background: var(--accent-cyan);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+  }
+
+  .timeline-date { font-size: 0.6rem; color: var(--text-dim); letter-spacing: 0.08em; margin-bottom: 0.25rem; }
+  .timeline-category { font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .timeline-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .timeline-desc { font-size: 0.7rem; color: var(--text-secondary); line-height: 1.7; }
+
+  /* ═══ SCREENSHOTS ═══ */
+  .screenshots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .screenshot-placeholder {
+    aspect-ratio: 16 / 9;
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screenshot-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(0, 230, 138, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 70% 60%, rgba(0, 212, 255, 0.02) 0%, transparent 50%);
+  }
+
+  .screenshot-placeholder .ph-icon {
+    font-size: 1.2rem;
+    color: var(--text-dim);
+    position: relative;
+    z-index: 1;
+  }
+
+  .screenshots-note {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screenshots-note::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0; width: 150px;
+    background: linear-gradient(90deg, rgba(0, 230, 138, 0.03), transparent);
+    pointer-events: none;
+  }
+
+  .screenshots-note p {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    position: relative;
+  }
+
+  .screenshots-note .lang-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+    display: block;
+  }
+
+  .screenshots-note .de { margin-top: 1rem; }
+
+  /* ═══ ABOUT ═══ */
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+
+  .about-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem;
+  }
+
+  .about-block-label { font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; }
+  .about-block p { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.75; }
+
+  .tech-stack { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+  .tech-tag { font-size: 0.6rem; color: var(--text-secondary); border: 1px solid var(--border); padding: 0.2rem 0.5rem; border-radius: 2px; }
+
+  /* ═══ FOOTER ═══ */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  footer span { color: var(--accent); }
+
+  .sep {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fade-up 0.6s ease-out both; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  .cursor-glow {
+    position: fixed;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 230, 138, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 9997;
+    transform: translate(-50%, -50%);
+    transition: left 0.15s, top 0.15s;
+  }
+
+  @media (max-width: 680px) {
+    section { padding: 4rem 1.25rem 3rem; }
+    .about-grid, .games-grid { grid-template-columns: 1fr; }
+    .screenshots-grid { grid-template-columns: 1fr 1fr; }
+    .hero-meta { flex-direction: column; gap: 0.5rem; }
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 56px; left: 0; right: 0;
+      background: rgba(6, 8, 12, 0.97);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem;
+      gap: 0.25rem;
+    }
+    .hamburger { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<nav>
+  <a href="#hero" class="nav-logo"><span class="dot"></span> pixelproof.dev</a>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">MENU</button>
+  <ul class="nav-links">
+    <li><a href="#games">Games</a></li>
+    <li><a href="#devlog">Devlog</a></li>
+    <li><a href="#screenshots">Screenshots</a></li>
+    <li><a href="#about">About</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow-2"></div>
+  <div style="position:relative;z-index:1;">
+    <div class="status-bar fade-in"><span class="blink"></span> DEVLOG — WORK IN PROGRESS</div>
+    <h1 class="fade-in delay-1">
+      <span class="hl-cyan">Day Zero.</span><br>
+      <span class="hl-green">Outbreak.</span><br>
+      Same lab. Different eyes.
+    </h1>
+    <p class="lead fade-in delay-2">
+      Two games. Two perspectives. One moment that ends the world.<br>
+      In Day Zero, you're the man who caused it all.<br>
+      In Outbreak, you're the one who has to survive it.
+    </p>
+    <div class="hero-meta fade-in delay-3">
+      <span>ENGINE <span class="val">Unity 6</span></span>
+      <span>LANG <span class="val">C#</span></span>
+      <span>STATUS <span class="val" style="color:var(--accent-amber)">Prototyping</span></span>
+      <span>GAMES <span class="val">2</span></span>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ═══ GAMES ═══ -->
+<section id="games">
+  <div class="section-label">The Eden Universe</div>
+  <h2>Games</h2>
+
+  <div class="games-grid">
+    <div class="game-card game-card--featured">
+      <div class="game-card-banner banner--outbreak">
+        <div class="game-title-overlay">
+          <h3 class="title--outbreak">Eden: Outbreak</h3>
+          <div class="subtitle">Top-Down Survival RPG</div>
+        </div>
+      </div>
+      <div class="game-card-body">
+        <div class="game-tags">
+          <span class="tag tag--green">Survival RPG</span>
+          <span class="tag tag--green">Mutation System</span>
+          <span class="tag tag--purple">Grid Inventory</span>
+          <span class="tag tag--amber">Station Crafting</span>
+        </div>
+        <p class="game-desc">A synthetic virus has rewritten the rules of biology. You're a researcher — infected, hunted, and forced to choose between healing and power. Every serum you craft, every mutation you embrace or suppress, reshapes your body, your relationships, and the world around you. Your closest companion is infected too. Whether you save them, lose them, or turn them into an enemy depends entirely on your choices.</p>
+        <div class="game-status status--wip">◆ In Development — Zone 1 Laboratory</div>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="game-card-banner banner--dayzero">
+        <div class="game-title-overlay">
+          <h3 class="title--dayzero">Eden: Day Zero</h3>
+          <div class="subtitle">Free Prologue</div>
+        </div>
+      </div>
+      <div class="game-card-body">
+        <div class="game-tags">
+          <span class="tag tag--cyan">Narrative</span>
+          <span class="tag tag--purple">Prologue</span>
+          <span class="tag tag--red">Corporate Horror</span>
+        </div>
+        <p class="game-desc">Before the outbreak, before the mutations — there was a man with a plan and a laboratory full of secrets. Play as the CEO of Neogenesis Corp in the final days before everything collapsed. Walk the sterile halls. Approve the experiments. Sign the reports. The world doesn't know what's coming. Neither do you.</p>
+        <div class="game-status status--free">◇ Free Prologue — Coming Later</div>
+      </div>
+    </div>
+
+    <div class="game-card" style="border-style:dashed;opacity:0.4;">
+      <div class="game-card-banner" style="height:180px;background:var(--bg-card);display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-size:1.5rem;color:var(--text-dim);">?</div>
+          <div style="font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text-dim);margin-top:0.3rem;">Eden: ???</div>
+        </div>
+      </div>
+      <div class="game-card-body">
+        <p class="game-desc" style="color:var(--text-dim);">The Eden universe has room for more stories. One lab. Many perspectives. Every ending opens a new beginning.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ═══ DEVLOG ═══ -->
+<section id="devlog">
+  <div class="section-label">Development Log</div>
+  <h2>Devlog — Eden: Day Zero</h2>
+
+  <div class="timeline" style="margin-top:2rem;">
+    <div class="timeline-entry">
+      <div class="timeline-date">2025-03-11</div>
+      <div class="timeline-category" style="color:var(--accent-cyan);">SYSTEMS</div>
+      <div class="timeline-title">Inventory Grid — Complete</div>
+      <div class="timeline-desc">5×6 grid with 25kg weight limit fully operational. Drag-and-drop, item stacking, weight enforcement, and slot-swap mechanics. ScriptableObject-driven item data.</div>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-date">2025-03-05</div>
+      <div class="timeline-category" style="color:var(--accent-amber);">CRAFTING</div>
+      <div class="timeline-title">CraftingManager + RecipeDataSO</div>
+      <div class="timeline-desc">Station-based crafting with recipe validation, timer-based serum cooking, and ScriptableObject recipe definitions. Workbench and Research Station differentiated.</div>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-date">2025-02-20</div>
+      <div class="timeline-category" style="color:var(--accent-purple);">UI</div>
+      <div class="timeline-title">HUD & Inventory UI</div>
+      <div class="timeline-desc">Minimal HUD with health, stamina, mutation percentage. Inventory panel with grid visualization, category filters, and item tooltips.</div>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-date">2025-02-10</div>
+      <div class="timeline-category" style="color:var(--text-dim);">PROTOTYPE</div>
+      <div class="timeline-title">Project Start</div>
+      <div class="timeline-desc">Eden: Day Zero repository initialized. Unity 6 project setup, player movement, camera follow, basic interaction system. The first line of code.</div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ═══ SCREENSHOTS ═══ -->
+<section id="screenshots">
+  <div class="section-label">Visual Progress</div>
+  <h2>Screenshots</h2>
+
+  <div class="screenshots-grid">
+    <div class="screenshot-placeholder"><span class="ph-icon">◻</span></div>
+    <div class="screenshot-placeholder"><span class="ph-icon">◻</span></div>
+    <div class="screenshot-placeholder"><span class="ph-icon">◻</span></div>
+    <div class="screenshot-placeholder"><span class="ph-icon">◻</span></div>
+    <div class="screenshot-placeholder"><span class="ph-icon">◻</span></div>
+    <div class="screenshot-placeholder"><span class="ph-icon">◻</span></div>
+  </div>
+
+  <div class="screenshots-note">
+    <span class="lang-label">EN</span>
+    <p>Screenshots are coming soon. The prototype is still in early development — systems first, visuals second. Once the laboratory zone has its first art pass, this section will fill up with in-game footage. No mockups, no concept art — only real gameplay.</p>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ═══ ABOUT ═══ -->
+<section id="about">
+  <div class="section-label">About</div>
+  <h2>About Me</h2>
+  <p class="lead" style="margin-bottom:1.5rem;">Solo indie developer building the Eden universe from the ground up. Learning Unity, C#, and game design in public — one commit at a time. Based in Potsdam, Germany.</p>
+
+  <div class="about-grid">
+    <div class="about-block">
+      <div class="about-block-label">Focus</div>
+      <p>Top-down 2D survival RPGs with deep systems — inventory, mutation mechanics, crafting, and narrative consequences that stick.</p>
+    </div>
+    <div class="about-block">
+      <div class="about-block-label">Philosophy</div>
+      <p>Ship playable prototypes. Don't rebuild what works. Pseudocode before code. Visible progress every session. Structure beats motivation.</p>
+    </div>
+    <div class="about-block">
+      <div class="about-block-label">Stack</div>
+      <div class="tech-stack">
+        <span class="tech-tag">Unity 6</span>
+        <span class="tech-tag">C#</span>
+        <span class="tech-tag">ScriptableObjects</span>
+        <span class="tech-tag">Pixel Art 2D</span>
+        <span class="tech-tag">Git</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <span>pixelproof.dev</span> — The Eden Universe<br>
+  <span style="margin-top:0.3rem;display:inline-block;">© 2025 — Made with caffeine and compiler errors.</span>
+</footer>
+
+<script>
+  const glow = document.getElementById('cursorGlow');
+  document.addEventListener('mousemove', e => { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; });
+
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 200) current = s.id; });
+    navLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
+  });
+
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', () => { document.querySelector('.nav-links').classList.remove('open'); });
+  });
+</script>
+
+</body>
+</html>
